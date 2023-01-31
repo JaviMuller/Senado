@@ -2,6 +2,12 @@ from ordered_set import OrderedSet
 from functools import reduce
 
 
+
+################################################################################
+############# Base classes: Classes that give support to the rest ##############
+################################################################################
+
+
 class Candidate:
     """Class that represents a candidate
     
@@ -146,7 +152,6 @@ class Tally:
     
     def add_vote_to_candidate(self, candidate):
         self.items[candidate] = self.items.get(candidate, 0) + 1
-        
 
 
 class RoundResult:
@@ -227,6 +232,12 @@ class RoundResult:
                      for x in self.res])) 
 
 
+
+################################################################################
+################################ Election Rounds ###############################
+################################################################################
+
+
 class Round:
     """Abstract class to represent a round
     
@@ -264,6 +275,8 @@ class Round:
         """
         raise NotImplementedError('Round.__str__: This method is not implemented')
 
+
+### Preferential rounds (main ones)
 
 class PreferentialRound(Round): 
     """Abstract class for a preferential type round
@@ -382,7 +395,9 @@ class PreferentialInclusiveRound(PreferentialRound):
             if vote in self.included:
                 return vote
         return None
-    
+
+
+##### Persistent tie breaker rounds
 
 class RankedRound(Round):
     """Abstract class to run a ranked round
@@ -537,6 +552,12 @@ class FirstPastThePostRound(Round):
         return RoundResult(votes, tally)
 
 
+
+################################################################################
+################################### Election ###################################
+################################################################################
+
+
 class Election:
     """Class to run an election
     
@@ -567,7 +588,7 @@ class Election:
         self.ballots = ballots
     
     def run(self, verbose = True, verboser = False):
-        """Run an election
+        """Run an election (## for flow control, # for normal comments)
 
         Args:
             verbose (bool, optional): Print the output of each round and the next round. Defaults to True.
@@ -593,33 +614,95 @@ class Election:
             if verbose:
                 print(f'### Eleição {positions[i]}:\n')
             
-            # 1st round
+            ## 1st round
             first_round = PreferentialExclusiveRound(self.ballots, elected).result()
-            winners = first_round.first
+            round = first_round
+            winners = round.first
             if verbose:
                 print(f'\tResultados 1ª ronda:')
-                print(first_round)
+                print(round)
                 
-            # Winner in 1st round (absolute majority)
-            if first_round.over_half(1):
+            ## Winner in 1st round with absolute majority
+            if round.over_half(1):
                 elected += winners[0]
                 if verbose:
                     print('\tVencedor por maioria na primeira ronda.')
-                    print(f'\tO cargo de {positions[i]} foi atribuído a: {first_round.tally[0][0]}.\n')
+                    print(f'\tO cargo de {positions[i]} foi atribuído a: {winners[0]}.\n')
                 continue
             
-            # More than two winners in 1st round
+            ## More than two winners in 1st round (tie breaker round)
             if len(winners) > 2:
                 i = 1
+                round = PreferentialInclusiveRound(self.ballots, winners).result()
                 if verbose:
-                    print('\tMais de dois vencedores na primeira ronda. Ronda de desempate.')
-                    print(f'\tResultados {i}ª ronda de desempate:')
-                inter_round = PreferentialInclusiveRound(self.ballots, winners).result()
-                while len(inter_round.first) > 2:
-                    # Persistent tie
-                    if winners == inter_round.first:
-                        inter_round = Election.persistent_tie_round(self.ballots, winners)
-                        winners = inter_round
+                    print('\tMais de dois vencedores na primeira ronda. Passa-se às rondas de desempate.')
+                    print(f'\tResultados da {i}ª ronda de desempate:')
+                    print(round)
+                while len(round.first) > 2:
+                    i += 1
+                    ## Persistent tie
+                    if winners == round.first:
+                        if verbose:
+                            print('\tEmpate persistente. Aplicando critérios de desempate.')
+                        round = Election.persistent_tie_rounds(self.ballots, winners, max=2, verbose=verbose,
+                                                               verboser=verboser)
+                        winners = round.first
                         break
-                
+                    ## Progression (number of winners decreases)
+                    else:
+                        round = PreferentialInclusiveRound(self.ballots, winners).result()
+                        winners = round.first
+                        if verbose:
+                            print(f'\tResultados da {i}ª volta de desempate:')
+                            print(round)
+            
+            ## One winner after 1st round (+ tie breaker round)
+            if len(winners) == 1:
+                if verbose:
+                    print('\tApenas um vencedor na primeira volta.')
                     
+                ## Sum of two most voted is over half
+                if first_round.over_half(2):
+                    # Store the winner of the first round for the second round
+                    finalists = winners
+                    if verbose:
+                        print('\tSoma dos dois primeiros superior a 50% na primeira volta.')
+                    ## No tie for second place
+                    if len(round.second) == 1:
+                        if verbose:
+                            print('\tNão existe empate entre os segundos lugares. ' +
+                                  'Segunda volta com os dois primeiros.')
+                        finalists += round.second
+                    ## Tie exists for second place
+                    else:
+                        if verbose:
+                            print('\tExiste empate entre os segundos lugares.')
+                        winners = round.second
+                        round = PreferentialInclusiveRound(self.ballots, round.second)
+                        ## More than a winner in intermediate round
+                        while len(round.first) > 1:
+                            ## Persistent tie
+                            if winners == round.first:
+                                if verbose:
+                                    print('\tEmpate persistente. Aplicando critérios de desempate.')
+                                round = Election.persistent_tie_rounds(self.ballots, winners, max=1, verbose=verbose,
+                                                               verboser=verboser)
+                        winners = round.first 
+                            
+
+                        
+                # Sum of two most voted is less than half
+                else:
+                    i = 1
+                    round = PreferentialExclusiveRound(self.ballots, elected + winners)
+                    if verbose:
+                        print('\tSoma dos dois primeiros inferior a 50%. ' +
+                              'Passa a ser determinado o oponente do vencedor para a segunda ronda')
+                        print(f'\tResultado da {i}ª ronda de desempate:')
+                        print(round)
+                    
+            # Two winners after 1st round
+            else:
+                
+                                
+            # Second round
