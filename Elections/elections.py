@@ -1,9 +1,6 @@
 from ordered_set import OrderedSet
 from functools import reduce
 
-indentation_res = '\t\t'
-dash = 80 * '-'
-
 
 class Candidate:
     """Class that represents a candidate
@@ -46,13 +43,14 @@ class Ballot:
         __str__
     """
 
-    def __init__(self, type = 1):
+    def __init__(self, type = 1, votes = []):
         """This function initializes a new ballot. If the vote is for a chamber, \
             the number of votes should be 4. Otherwise, if it is for the \
                 Superior Council, the number of votes should be 8.
 
         Args:
             type (int, optional): 1 -> Chamber, 2 -> Superior Council. Defaults to 1.
+            votes (list<Candidate>, optional): Candidates by preferential order. Defaults to empty 
             
         Raises:
             ValueError: When the type is not 1 or 2
@@ -60,7 +58,7 @@ class Ballot:
         if (type not in (1, 2)):
             raise ValueError('Ballot.__init__: inexistent type')
         self.type = type
-        self.votes = OrderedSet([])
+        self.votes = OrderedSet(votes)
     
     def is_valid(self):
         """Checks if a ballot has the correct number of votes
@@ -97,7 +95,7 @@ class Ballot:
         """
         ret = 'Voto' + ('Câmara' if self.type == 1 else 'Conselho Superior') + ':\n'
         for i in range(len(self.votes)):
-            ret += f' {i+1}.\t{self.votes[i]}\n'
+            ret += f' {i+1:>2s}.\t{self.votes[i]}\n'
         return ret
 
 
@@ -105,15 +103,20 @@ class Tally:
     """Class that stores the tally of votes
 
     Attr:
-        votes(dict<Candidate: int>): Dictionary of candidates and their votes
+        items(dict<Candidate: int>): Dictionary of candidates and their tallies
     
     Meth:
         __init__
         to_ordered_list
         merge
+        is_empty
+        add_vote_to_candidate
     """
     def __init__(self, items = {}):
-        """Initializes an empty tally
+        """Initializes a tally
+        
+        Args:
+            items (dict<Candidate: int>, optional): Dictionary of candidates and their tallies
         """
         self.items = items
     
@@ -135,6 +138,8 @@ class Tally:
         Returns:
             Tally: the merged tally 
         """
+        for candidate in tally.items.keys():
+            self.items[candidate] = self.items.get(candidate, 0) + tally.items[candidate]
     
     def is_empty(self):
         return len(self.items) == 0
@@ -161,6 +166,8 @@ class RoundResult:
         over_half
         __str__
     """
+    res_indentation = '\t\t'
+    dash = 52 * '-'
     result_header = f'{"NOME":^30s}{"VOTOS":^10s}{"PERCENTAGEM":^12s}'
     
     def __init__(self, votes, tally):
@@ -203,20 +210,20 @@ class RoundResult:
         """
         return sum(self.percentages[0:n]) > 0.5
     
-    # TODO: Cleanup
+    
     def __str__(self):
         """String representation of a tally
 
         Returns:
             str: representation of tally
         """
-        return (indentation_res + f'Número de votos contabilizados: {self.votes}.\n' + 
-                indentation_res + f'Resultados:\n\n' +
-                indentation_res + dash + '\n' +
-                indentation_res + RoundResult.result_header + '\n' +
-                indentation_res + dash + '\n' + 
-                indentation_res + '\n'.join(
-                    [f'{indentation_res}\t{x[0]:<30s}{x[1]:^10s}{(x[1]/self.votes*100):^12.1f}' 
+        return (RoundResult.res_indentation + f'Número de votos contabilizados: {self.votes}.\n' + 
+                RoundResult.res_indentation + f'Resultados:\n\n' +
+                RoundResult.res_indentation + RoundResult.dash + '\n' +
+                RoundResult.res_indentation + RoundResult.result_header + '\n' +
+                RoundResult.res_indentation + RoundResult.dash + '\n' + 
+                RoundResult.res_indentation + '\n'.join(
+                    [f'{RoundResult.res_indentation}\t{x[0]:<30s}{x[1]:^10s}{(x[1]/self.votes*100):^12.1f}' 
                      for x in self.res])) 
 
 
@@ -250,6 +257,11 @@ class Round:
         raise NotImplementedError('Round.result: This method is not implemented')
     
     def __str__(self):
+        """String representation of a round
+
+        Raises:
+            NotImplementedError: Needs to be implemented by children
+        """
         raise NotImplementedError('Round.__str__: This method is not implemented')
 
 
@@ -330,7 +342,7 @@ class PreferentialExclusiveRound(PreferentialRound):
         Returns:
             Candidate: the preferred candidate after exclusions
         """
-        for vote in ballot:
+        for vote in ballot.votes:
             if vote not in self.excluded:
                 return vote
         return None
@@ -366,7 +378,7 @@ class PreferentialInclusiveRound(PreferentialRound):
         Returns:
             Candidate: the preferred candidate from the included
         """
-        for vote in ballot:
+        for vote in ballot.votes:
             if vote in self.included:
                 return vote
         return None
@@ -448,7 +460,7 @@ class ConstantRankedRound(RankedRound):
         Returns:
             _type_: _description_
         """
-        return Tally({k:1 for k in ballot & self.included})
+        return Tally({k:1 for k in ballot.votes & self.included})
 
 
 class BordaRankedRound(RankedRound):
@@ -483,7 +495,7 @@ class BordaRankedRound(RankedRound):
         """
         return Tally(reduce(lambda d1, d2: 
             d1.update({d2: 8 - len(d1)}) if d2 in self.included else d1, 
-            ballot, {}))
+            ballot.votes, {}))
 
 
 class FirstPastThePostRound(Round):
@@ -519,8 +531,8 @@ class FirstPastThePostRound(Round):
         tally = Tally()
         votes = 0
         for ballot in self.ballots:
-            if ballot[round] in self.included:
-                tally.add_vote_to_candidate(ballot[round])
+            if ballot.votes[round] in self.included:
+                tally.add_vote_to_candidate(ballot.votes[round])
                 votes += 1
         return RoundResult(votes, tally)
 
@@ -532,6 +544,10 @@ class Election:
         type (int): 1 -> Chamber, 2 -> Superior Council
         candidates(list<Candidate>): candidates running for election
         ballots(list<Ballot>): ballots casted
+    
+    Meth:
+        __init__
+        run
     """
     def __init__(self, type, candidates, ballots):
         """Initialize a new election
@@ -575,45 +591,35 @@ class Election:
 
         for i in range(positions):
             if verbose:
-                print(f'### Eleição {positions[i]}:')
+                print(f'### Eleição {positions[i]}:\n')
             
             # 1st round
             first_round = PreferentialExclusiveRound(self.ballots, elected).result()
+            winners = first_round.first
             if verbose:
                 print(f'\tResultados 1ª ronda:')
-                print(PreferentialExclusiveRound.res_str(first_round))
+                print(first_round)
                 
             # Winner in 1st round (absolute majority)
-            if first_round.tally[0][1] / first_round.votes > 0.5:
-                elected += first_round.tally[0][0]
+            if first_round.over_half(1):
+                elected += winners[0]
                 if verbose:
+                    print('\tVencedor por maioria na primeira ronda.')
                     print(f'\tO cargo de {positions[i]} foi atribuído a: {first_round.tally[0][0]}.\n')
                 continue
-                
-            # Not a tie for second place in first round and sum of two first > 50%
-            if first_round.tally[1][1] != first_round.tally[2][1] and (
-                sum(first_round.tally[0][1], first_round.tally[1][1]) / first_round.votes > 0.5):
-                # 2nd round
-                included = [first_round.tally[0][0], first_round.tally[1][0]]
-                second_round = PreferentialInclusiveRound(self.ballots, included).result()
+            
+            # More than two winners in 1st round
+            if len(winners) > 2:
+                i = 1
                 if verbose:
-                    print(f'Resultados 2ª ronda:')
-                    print(PreferentialInclusiveRound.res_str(second_round))
-            
-                # Winner in 2nd round
-                if second_round.tally[0][1] != second_round.tally[1][1]:
-                    elected += second_round.tally[0][0]
-                    if verbose:
-                        print(f'\tO cargo de {positions[i]} foi atribuído a: {first_round.tally[0][0]}.\n')
-                    continue
-            
-                # Persistent tie (2nd round)
-                included = [second_round.tally[0][0], second_round.tally[1][0]]
-                tie_breaker = PersistentTieRound
-                 
+                    print('\tMais de dois vencedores na primeira ronda. Ronda de desempate.')
+                    print(f'\tResultados {i}ª ronda de desempate:')
+                inter_round = PreferentialInclusiveRound(self.ballots, winners).result()
+                while len(inter_round.first) > 2:
+                    # Persistent tie
+                    if winners == inter_round.first:
+                        inter_round = Election.persistent_tie_round(self.ballots, winners)
+                        winners = inter_round
+                        break
                 
                     
-                
-                
-                
-            
