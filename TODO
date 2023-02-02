@@ -4,3 +4,4 @@ Add unit tests
 Define CLI/UI interface
 Implement integration tests
 Investigate Github actions for branch checking
+Investigate whether it makes sense to use any other github features (wiki, projects, etc)
