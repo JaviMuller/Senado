@@ -1,0 +1,2 @@
+TYPE_CS = 1
+TYPE_NC = 2
