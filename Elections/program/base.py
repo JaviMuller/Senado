@@ -305,7 +305,7 @@ class RoundResult:
         Returns:
             str: representation of tally
         """
-        return ('\n'.join([f'Número de votos contabilizados: {self.votes}.',
+        return ('\n'.join([f'Número de votos contabilizados: {self.votes}',
                          '', 
                          f'Resultados:',
                          '',

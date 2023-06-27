@@ -181,6 +181,23 @@ class PreferentialInclusiveRound(PreferentialRound):
             if vote in self.included:
                 return vote
         return None
+    
+    def result(self):
+        """Computes the result of a preferential round
+
+        Returns:
+            RoundResult: The result of the preferential round
+        """
+        initial = {candidate: 0 for candidate in self.included}
+        tally = Tally(initial)
+        votes = len(self.ballots)
+        for ballot in self.ballots:
+            preferred = self.preferred(ballot)
+            if preferred is None:
+                votes -= 1
+            else:
+                tally.add_vote_to_candidate(preferred)
+        return RoundResult(votes, tally)
 
 
 ##### Persistent tie breaker rounds
@@ -518,6 +535,7 @@ class Election:
                 log.info(indent(f'O cargo de {seat} foi atribuído a: {str(winners[0])}.', lvl))
                 continue
             
+            ## No winner by majority in 1st round @4
             log.info(indent("Não houve vencedor por maioria na 1ª volta (4).", lvl))
             
             ## More than two winners in 1st round (tie breaker round) @4.1
@@ -560,6 +578,7 @@ class Election:
                     
             ## Two winners after 1st round (+ tie breaker rounds) @4.3
             else:
+                log.info(indent(f'Empate na 1ª volta ({str(winners[0])} e {str(winners[1])}) (4.3).', lvl))
                 ## Sum of two most voted is over half @4.3.c)
                 if first_round.over_half(2):
                     log.info(indent(f'Soma dos dois primeiros ({str(winners[0])} e {str(winners[1])}) superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.c).', lvl))
