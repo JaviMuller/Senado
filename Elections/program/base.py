@@ -46,7 +46,9 @@ class Ballot:
     """Class that stores the ballot of a person
     
     Attributes:
+        id (int): id of the ballot
         votes (OrderedSet<Candidate>): Votes of the person by preferential order
+        max_votes (int): Maximum number of votes of the ballot
     
     Methods:
         __init__
@@ -59,19 +61,35 @@ class Ballot:
         """This function initializes a new ballot.
 
         Args:
+            id (int): id of the ballot
             votes (optional(list<Candidate>)): Candidates by preferential order. Defaults to []
         """
-        self.max_votes = -1
         self.id = id
         self.votes = votes.copy()
+        self.max_votes = -1
     
     def get_id(self):
+        """Gets the id of the ballot
+
+        Returns:
+            int: ballot id
+        """
         return self.id
 
     def get_max_votes(self):
+        """Gets the maximum number of votes of a ballot
+
+        Returns:
+            int: maximum number of votes
+        """
         return self.max_votes
 
     def get_votes(self):
+        """Get the votes of a ballot
+
+        Returns:
+            list(Candidate): votes
+        """
         return self.votes
 
     def is_valid(self):
@@ -115,7 +133,9 @@ class ChamberBallot(Ballot):
     """Class that stores the ballot of a person for the Chamber elections
     
     Attributes:
-        votes (OrderedSet<Candidate>): Votes of the person by preferential order  (inherits from Ballot)
+        id (int): id of the ballot
+        votes (OrderedSet<Candidate>): Votes of the person by preferential order
+        max_votes (int): Maximum number of votes of the ballot
     
     Methods:
         __init__  (inherits from Ballot)
@@ -134,7 +154,9 @@ class SuperiorCouncilBallot(Ballot):
     """Class that stores the ballot of a person for the Superior Council elections
     
     Attributes:
-        votes (OrderedSet<Candidate>): Votes of the person by preferential order  (inherits from Ballot)
+        id (int): id of the ballot
+        votes (OrderedSet<Candidate>): Votes of the person by preferential order
+        max_votes (int): Maximum number of votes of the ballot
     
     Methods:
         __init__  (inherits from Ballot)
@@ -194,6 +216,11 @@ class Tally:
             self.items[candidate] = self.items.get(candidate, 0) + tally.items[candidate]
 
     def is_empty(self):
+        """Checks if the tally is empty
+
+        Returns:
+            bool: True if the tally is empty
+        """
         return len(self.items) == 0
 
     def add_vote_to_candidate(self, candidate):
@@ -291,3 +318,25 @@ class RoundResult:
                          ' '
                          ])
         )
+
+
+################################################################################
+############################## Auxiliary functions #############################
+################################################################################
+
+def parse_csv(path):
+    """Parses the data from the import file
+
+    Args:
+        path (str): path to the import file
+    
+    Returns:
+        tuple(election_type (int), candidates (list(Candidate)), ballots (list(Ballot))): election type, list of candidates and list of ballots
+    """
+    data = import_csv(path)
+    candidates = [Candidate(name) for name in data['candidates']]
+    if data['type'] == TYPE_CS:
+        ballots = [SuperiorCouncilBallot(id, votes) for id, votes in data['ballots']]
+    elif data['type'] == TYPE_NC:
+        ballots = [ChamberBallot(id, votes) for id, votes in data['ballots']]    
+    return data['type'], candidates, ballots
