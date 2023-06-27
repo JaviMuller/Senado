@@ -54,7 +54,7 @@ def subtitle_str(subtitle):
 
 import pandas as pd
 
-def parse_csv(path):
+def csv_to_df(path):
     """Function to parse a csv file into a dataframe
 
     Arguments:
@@ -67,6 +67,14 @@ def parse_csv(path):
     return df.astype('Int64')
 
 def get_election_type(df):
+    """Function to get the election type from a dataframe
+    
+    Arguments:
+        df (pandas.DataFrame): dataframe with the csv file data
+    
+    Returns:
+        int: election type
+    """
     if df.index.name == 'CS':
         return TYPE_CS
     elif df.index.name == 'NC':
@@ -104,12 +112,29 @@ def get_ballots(df, candidates):
     return ballots
 
 def csv_vote(ballot, candidate):
+    """Converts a ballot vote to a csv entry
+
+    Arguments:
+        ballot (Ballot): ballot
+        candidate (Candidate): candidate 
+
+    Returns:
+        pd.NA or int: 
+    """
     try:
         return ballot.get_votes().index(candidate) + 1
     except ValueError:
         return pd.NA
 
-def export_csv(election_type, candidates, ballots, path):
+def export_csv(path, election_type, candidates, ballots):
+    """Function to export a csv file to given path
+    
+    Arguments:
+        path (string): path to the csv file
+        election_type (int): election type
+        candidates (list(Candidate)): list of candidates
+        ballots (list(Ballot)): list of ballots
+    """
     if election_type == TYPE_CS:
         id = 'CS'
     elif election_type == TYPE_NC:
@@ -120,3 +145,65 @@ def export_csv(election_type, candidates, ballots, path):
     
     df = pd.DataFrame(data)
     df.to_csv(path, encoding='utf-8')
+    
+def import_csv(path):
+    """Imports a csv file from a given path
+    
+    Arguments:
+        path (string): path to the csv file
+    
+    Returns:
+        dict: dictionary with the election data (type, candidates, ballots)
+    """
+    ret = {}
+    df = csv_to_df(path)
+    ret['type'] = get_election_type(df)
+    ret['candidates'] = get_candidates(df)
+    ret['ballots'] = get_ballots(df, ret['candidates'])
+    return ret
+
+
+
+################################################################################
+#################################### Getchar ###################################
+################################################################################
+
+class _Getchar:
+    """Gets a single character from standard input.  Does not echo to the screen."""
+    def __init__(self):
+        try:
+            self.impl = _GetcharWindows()
+        except ImportError:
+            self.impl = _GetcharUnix()
+
+    def __call__(self): return self.impl()
+
+
+class _GetcharUnix:
+    """Getchar implementation for Unix"""
+    def __init__(self):
+        import tty, sys
+
+    def __call__(self):
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+
+class _GetcharWindows:
+    """Getchar implementation for Windows"""
+    def __init__(self):
+        import msvcrt
+
+    def __call__(self):
+        import msvcrt
+        return msvcrt.getch()
+
+
+getchar = _Getchar()

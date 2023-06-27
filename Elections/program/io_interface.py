@@ -5,17 +5,29 @@ class IOInterface():
     def __init__(self):
         pass
     
-    def get_election_type():
+    def welcome(self):
         pass
     
-    def get_candidates():
+    def ask_csv_import(self):
         pass
     
-    def get_ballots(election_type):
+    def ask_csv_export(self, election_type, candidates, ballots):
         pass
     
-    def get_presidential_choice(candidates):
+    def ask_log_export(self):
         pass
     
-    def output_results(seats, elected):
+    def get_election_type(self):
+        pass
+    
+    def get_candidates(self):
+        pass
+    
+    def get_ballots(self, election_type):
+        pass
+    
+    def get_presidential_choice(self, candidates):
+        pass
+    
+    def output_results(self, seats, elected):
         pass

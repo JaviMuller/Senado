@@ -1,7 +1,7 @@
 __author__ = "Javier de Muller"
 __copyright__ = "Copyright (C) 2023 Javier de Muller"
 __license__ = "MIT License"
-__version__ = "1.0"
+__version__ = "1.1"
 
 from utils import *
 from base import *
@@ -26,12 +26,13 @@ class Round:
     Methods:
         __init__
         result
+        __str__
     """
 
     def __init__(self, ballots):
         """Initializes a round by attaching the ballots to it
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): list of ballots to be tallied
         """
         self.ballots = ballots
@@ -73,7 +74,7 @@ class PreferentialRound(Round):
     def __init__(self, ballots):
         """Initialize a new preferential round
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): list of ballots to be tallied
         """
         super().__init__(ballots)
@@ -81,7 +82,7 @@ class PreferentialRound(Round):
     def preferred(self, ballot):
         """Abstract method to select the preferred candidate of a ballot
 
-        Args:
+        Arguments:
             ballot (Ballot): ballot to select the preferred candidate from
 
         Raises:
@@ -116,12 +117,13 @@ class PreferentialExclusiveRound(PreferentialRound):
     Methods:
         __init__
         preferred
+        result
     """
 
     def __init__(self, ballots, excluded = []):
         """Initializes a new preferential exclusive round
         
-        Args:
+        Arguments:
             ballots (list<Ballot>): Ballots to be tallied
             excluded (list<Candidate>): Exclude candidates from tally. Defaults to []
         """
@@ -131,7 +133,7 @@ class PreferentialExclusiveRound(PreferentialRound):
     def preferred(self, ballot):
         """Selects the preferred candidate in a ballot, exculding the candidates that need to be excluded
 
-        Args:
+        Arguments:
             ballot (Ballot): ballot to be tallied
 
         Returns:
@@ -153,12 +155,13 @@ class PreferentialInclusiveRound(PreferentialRound):
     Methods:
         __init__
         preferred
+        result
     """
 
     def __init__(self, ballots, included):
         """Initializes a new preferential inclusive round
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): ballots to be tallied
             included (list<Candidate>): candidates to be included in the tally
         """
@@ -168,7 +171,7 @@ class PreferentialInclusiveRound(PreferentialRound):
     def preferred(self, ballot):
         """Selects the preferred candidate in a ballot, from the list of included candidates
 
-        Args:
+        Arguments:
             ballot (Ballot): ballot to be tallied
 
         Returns:
@@ -197,7 +200,7 @@ class RankedRound(Round):
     def __init__(self, ballots):
         """Initialize a new ranked round. This types of rounds have more than 1 votes per ballot
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): list of ballots to be tallied
         """
         super().__init__(ballots)
@@ -205,7 +208,7 @@ class RankedRound(Round):
     def ballot_tally(self, ballot):
         """Tally for an individual ballot
 
-        Args:
+        Arguments:
             ballot (Ballot): ballot to be tallied
 
         Raises:
@@ -239,12 +242,13 @@ class ConstantRankedRound(RankedRound):
     Methods:
         __init__
         ballot_tally
+        result
     """
 
     def __init__(self, ballots, included):
         """Initialize a new approval voting round
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): ballots to be tallied
             included (list<Candidate>): candidates to be included in the tally
         """
@@ -254,7 +258,7 @@ class ConstantRankedRound(RankedRound):
     def ballot_tally(self, ballot):
         """Add 1 vote for each candidate named in the ballot and included in the tally
 
-        Args:
+        Arguments:
             ballot (Ballot): ballot to be tallied
 
         Returns:
@@ -273,12 +277,13 @@ class BordaRankedRound(RankedRound):
     Methods:
         __init__
         ballot_tally
+        result
     """
 
     def __init__(self, ballots, included):
         """Initialize a new borda ranked round
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): ballots to be tallied
             included (list<Candidate>): candidates to be included in the tally
         """
@@ -288,7 +293,7 @@ class BordaRankedRound(RankedRound):
     def ballot_tally(self, ballot):
         """Add 8 votes for 1st candidate, 7 for second, ...
 
-        Args:
+        Arguments:
             ballot (Ballot): ballot to be tallied
 
         Returns:
@@ -310,13 +315,14 @@ class FirstPastThePostRound(RankedRound):
 
     Methods:
         __init__
+        ballot_tally
         result
     """
 
     def __init__(self, ballots, included, round = 1):
         """Initialize a first-past-the-post round
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): ballots to be tallied
             included (list<Candidate>): candidates to be included in the tally
             round (optional(int)): which round is being done. Defaults to 1.
@@ -337,7 +343,6 @@ class PresidentialRound(Round):
     Attributes:
         ballots (list<Ballot>): ballots to be tallied
         included (list<Candidate>): candidates to be included in the tally
-        round (int): which round is being done (look at the nth preference depending on round)
     
     Methods:
         __init__
@@ -347,7 +352,7 @@ class PresidentialRound(Round):
     def __init__(self, ballots, included):
         """Initialize a presidential round
 
-        Args:
+        Arguments:
             ballots (list<Ballot>): ballots to be tallied
             included (list<Candidate>): candidates to be included in the tally
             round (optional(int)): which round is being done. Defaults to 1.
@@ -358,7 +363,7 @@ class PresidentialRound(Round):
     def result(self, interface):
         """Compute the result of the round
 
-        Args:
+        Arguments:
             interface (IOInterface): Class used to input the presidential election
         
         Returns:
@@ -396,7 +401,7 @@ class Election:
     def __init__(self, candidates, ballots, interface):
         """Initialize a new election
 
-        Args:
+        Arguments:
             candidates(list<Candidate>): candidates running for election
             ballots(list<Ballot>): ballots casted
             interface (IOInterface): Class used to input the presidential election
@@ -408,7 +413,7 @@ class Election:
     def tiebreaker(self, candidates, lvl, max_winners = 1):
         """Tiebreaker for an inclusive round
 
-        Args:
+        Arguments:
             candidates (list<Candidate>): candidates to be considered
             lvl (int): indentation of logs
             max_winners (int): maximum number of winners to be considered
@@ -445,9 +450,10 @@ class Election:
     def persistent_tie_rounds(self, candidates, lvl, presidential_round = True, max_winners = 1):
         """Run persistent tie rounds
 
-        Args:
+        Arguments:
             candidates (list<Candidate>): candidates to be considered
             lvl (int): indentation of logs
+            presidential_round (bool) = in case of absolute tie, should a presidential round be run? (default: True) 
             max_winners (int): maximum number of winners to be considered
 
         Returns:
@@ -629,7 +635,11 @@ class Election:
             elected += round.first
             log.info(indent(f'O cargo de {seat} foi atribuído a: {str(round.first[0])}.', lvl))
 
-        ## End of election, output results
+        ## End of election, log and output results
+        log.info(subtitle_str('Resultados'))
+        for i in range(len(self.seats)):
+            log.info(indent(f'{self.seats[i]}: {str(elected[i])}', 1))
+
         self.interface.output_results(self.seats, elected)
 
 
@@ -641,21 +651,23 @@ class ChamberElection(Election):
         seats(list<str>): names of the seats to be filled
         candidates(list<Candidate>): candidates running for election
         ballots(list<Ballot>): ballots casted
+        chamber(str): name of the chamber
 
     Methods:
         __init__
         tiebreaker
         persistent_tie_rounds
+        set_chamber
         run
     """
     type = TYPE_NC
     ballot_size = 4
-    seats = ['I Vogal', 'II Vogal', 'III Vogal', 'I Suplente']
+    seats = ['I Vogal', 'II Vogal', 'III Vogal']
     
     def set_chamber(self, name):
         """Sets the chamber name
 
-        Args:
+        Arguments:
             name(str): name of the chamber
         """
         self.chamber = name
@@ -698,19 +710,37 @@ class SuperiorCouncilElection(Election):
 ################################################################################
 
 class App():
+    """Main application class"""
+    
     def __init__(self, election_type = -1, candidates = [], ballots = [], interface=CLInterface()):
         self.election_type = election_type
-        self.interface = interface
         self.candidates = candidates.copy()
         self.ballots = ballots.copy()
+        self.interface = interface
+        
+    def is_set(self):
+        return self.election_type != -1 and len(self.candidates) > 0 and len(self.ballots) > 0
     
     def run(self, export = ''):
-        if self.election_type == -1:
-            self.election_type = self.interface.get_election_type()
-        self.candidates = self.interface.get_candidates(self.candidates)
-        self.ballots = self.interface.get_ballots(self.election_type, self.candidates, self.ballots)
+        self.interface.welcome()
+        if (len(log.handlers) == 1): # Only console handler
+            path = self.interface.ask_log_export()
+            if path != '':
+                file_handler = logging.FileHandler(path, mode='w', encoding='utf-8')
+                file_handler.setLevel(logging.INFO)
+                file_handler.setFormatter(FORMATTER)
+                log.addHandler(file_handler)
+        if not self.is_set():
+            path = self.interface.ask_csv_import()
+            if path != '':
+                self.election_type, self.candidates, self.ballots = parse_csv(path)
+            else:
+                self.election_type = self.interface.get_election_type()
+                self.candidates = self.interface.get_candidates(self.candidates)
+                self.ballots = self.interface.get_ballots(self.election_type, self.candidates, self.ballots)
+                self.interface.ask_csv_export(self.election_type, self.candidates,self.ballots)
         if export != '':
-            export_csv(ballots, export)
+            export_csv(self.election_type, self.candidates, self.ballots, export)
         if self.election_type == TYPE_CS:
             election = SuperiorCouncilElection(self.candidates, self.ballots, self.interface)
         elif self.election_type == TYPE_NC:
@@ -718,6 +748,8 @@ class App():
         else:
             raise ValueError('App.run: Invalid Election Type.')
         election.run()
+        print("Pressione qualquer tecla para saír...")
+        getchar()
 
 
 
@@ -729,10 +761,9 @@ if __name__ == '__main__':
     import argparse
     from datetime import datetime
     import os
-    
-    FORMATTER = logging.Formatter('%(message)s')
-    LOG_DIR = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'logs')
-    OUT_DIR = os.path.join(os.path.normpath(os.getcwd() + os.sep + os.pardir), 'out')
+
+    LOG_DIR = os.path.join(os.path.normpath(__file__ + 2*(os.sep + os.pardir)), 'logs')
+    OUT_DIR = os.path.join(os.path.normpath(__file__ + 2*(os.sep + os.pardir)), 'out')
     LOG_FILENAME = os.path.join(LOG_DIR, datetime.today().strftime("%Y-%m-%d_%H-%M-%S") + '.log')
     OUT_FILENAME = os.path.join(OUT_DIR, datetime.today().strftime("%Y-%m-%d_%H-%M-%S") + '.csv')
     
@@ -757,9 +788,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.command_line:
         interface = CLInterface()
-    # elif args.graphical_user_interface:
+    # elif Arguments.graphical_user_interface:
     #     raise NotImplementedError('Graphical User Interface not implemented.')
-    # elif args.web_interface:
+    # elif Arguments.web_interface:
     #     raise NotImplementedError('Web Interface not implemented.')
     else:
         interface = CLInterface() # Default
@@ -772,7 +803,7 @@ if __name__ == '__main__':
     if (args.log):
         if not os.path.exists(LOG_DIR):
             os.makedirs(LOG_DIR)
-        file_handler = logging.FileHandler(LOG_FILENAME, encoding='utf-8')
+        file_handler = logging.FileHandler(LOG_FILENAME, mode='w', encoding='utf-8')
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(FORMATTER)
         log.addHandler(file_handler)
@@ -780,13 +811,7 @@ if __name__ == '__main__':
     
     ## Import election_type, candidates and ballots from CSV
     if (args.input_csv):
-        df = parse_csv(args.input_csv)
-        election_type = get_election_type(df)
-        candidates = [Candidate(name) for name in get_candidates(df)]
-        if election_type == TYPE_CS:
-            ballots = [SuperiorCouncilBallot(id, votes) for id, votes in get_ballots(df, candidates)]
-        elif election_type == TYPE_NC:
-            ballots = [ChamberBallot(id, votes) for id, votes in get_ballots(df, candidates)]
+        election_type, candidates, ballots = parse_csv(args.input_csv)
         app = App(election_type, candidates, ballots, interface)
     else:
         app = App(interface=interface)

@@ -1,12 +1,20 @@
 __author__ = "Javier de Muller"
 __copyright__ = "Copyright (C) 2023 Javier de Muller"
 __license__ = "MIT License"
-__version__ = "0.9"
+__version__ = "1.0"
 
 from io_interface import *
 from utils import *
 
+# Stuff for getting open file dialog box
+import tkinter as tk
+from tkinter import filedialog
+
+root = tk.Tk()
+root.withdraw() # we don't want a full GUI, so keep the root window from appearing
+
 class CLInterface(IOInterface):
+    
     def election_type_selection_str(self):
         return '\n'.join([
             indent('Selecione o tipo de eleição:', 0),
@@ -18,6 +26,7 @@ class CLInterface(IOInterface):
     
     def get_choice(self, max, empty=False):
         while True:
+            assert max > 0
             print(f'Escolha (1-{max}): ', end='')
             try:
                 opt_choice = input()
@@ -43,6 +52,36 @@ class CLInterface(IOInterface):
                         return False
                 except:
                     print('Escolha inválida (O valor deve ser S ou N)')
+    
+    def welcome(self):
+        print(title_str('Programa Eleições Senado'))
+    
+    def ask_csv_import(self):
+        while True:
+            if self.get_confirmation('Quer importar um ficheiro CSV?'):
+                path = filedialog.askopenfilename(defaultextension='.csv', filetypes=[('CSV files', '*.csv'), ('All files', '*.*')])
+                if path != '':
+                    return path
+            else:
+                return ''
+            
+    def ask_csv_export(self, election_type, candidates, ballots):
+        while True:
+            if self.get_confirmation('Quer exportar os candidatos e boletins para um ficheiro CSV?'):
+                path = filedialog.asksaveasfilename(defaultextension='.csv', filetypes=[('CSV files', '*.csv'), ('All files', '*.*')])
+                if path != '':
+                    export_csv(path, election_type, candidates, ballots)
+            else:
+                return ''
+    
+    def ask_log_export(self):
+        while True:
+            if self.get_confirmation('Quer salvar os resultados num ficheiro?'):
+                path = filedialog.asksaveasfilename(defaultextension='.log', filetypes=[('Log files', '*.log'), ('All files', '*.*')])
+                if path != '':
+                    return path
+            else:
+                return ''
     
     def get_election_type(self):
         while True:
@@ -111,6 +150,7 @@ class CLInterface(IOInterface):
             print(indent(ballot, 1))
             if self.get_confirmation('Confirmar?'):
                 return ballot
+            return None
 
     def get_ballots(self, election_type, candidates, initial=[]):
         while True:
@@ -120,7 +160,9 @@ class CLInterface(IOInterface):
                 print(f'Foram inseridos {len(ballots)} boletins de voto.')
                 if not self.get_confirmation('Quer inserir mais um boletim?'):
                     break
-                ballots.append(self.get_ballot(election_type, candidates, inserted_ids=[ballot.get_id() for ballot in ballots]))
+                ballot = self.get_ballot(election_type, candidates, inserted_ids=[ballot.get_id() for ballot in ballots])
+                if ballot != None:
+                    ballots.append()
             ballots.sort(key=lambda x: x.get_id())
             print('Os boletins são:')
             for ballot in ballots:
@@ -136,6 +178,4 @@ class CLInterface(IOInterface):
         return candidates[choice-1]
     
     def output_results(self, seats, elected):
-        print(title_str('Resultados'))
-        for i in range(len(seats)):
-            print(f'{seats[i]}: {str(elected[i])}')
+        pass # Already done in logging
