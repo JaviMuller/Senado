@@ -1,0 +1,39 @@
+
+--------------------------------------------------------------------------------
+TEST-CASES              [SCRIPT(<ROUNDS>)]*
+--------------------------------------------------------------------------------
+   (3)               [synth1, <1, 4, 6, 11>]
+  (4.1)              [synth1, <2, 3, 8>]
+(4.2.a.i)            [synth1, <7, 9>]
+(4.2.a.ii)           [synth1, <3>]
+ (4.2.b)             [synth1, <2>]
+ (4.3.c)             [synth1, <5, 10>]
+ (4.3.d)             [synth1, <8>]
+ (4.3.e)             [synth2, <1>]
+  (5.5)              [synth1, <5>], [synth2, <1>]
+ (spec1)             [synth2, <1>]
+ (spec2)             [synth1, <12>]
+ (spec3)             [synth2, <1>]
+
+
+Test case explanation:
+  3        - 1 winner in 1st round, elected by majority
+  4.1      - More than 2 winners in 1st round (1st round tiebreaker)
+  4.2.a.i  - 1 winner in @1st round, sum of two first >50%, tie for second place
+  4.2.a.ii - 1 winner in @1st round, sum of two first >50%, no tie for second place
+  4.2.b    - 1 winner in @1st round, sum of two first <= 50%
+  4.3.c    - 2 winners in @1st round, sum of two first >50%
+  4.3.d    - 2 winners in @1st round, sum of two first <=50%, sum of three first >50%
+  4.3.e    - 2 winners in @1st round, sum of two first <=50%, sum of three first <=50%
+  5.5      - Presidential tie breaker (it will use all tiebreaker criteria)
+  spec1    - Custom made criteria. Diminishing consequent preferential tiebreakers
+  spec2    - Custom made criteria. 1st round without votes
+  spec3    - Custom made criteria. 4.3.e + absolute tie breaker (tie in special second round)
+
+
+@1st round = 1st round + tiebreakers
+
+Notes: 
+   - On the synthetic tests, the presidential choice is always the first one.
+   - The rest of the rounds of synth2 have not been checked because they are not necessary
+   to check all the cases

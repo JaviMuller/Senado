@@ -1,6 +1,7 @@
 from functools import reduce
 from constants import *
 from utils import *
+import math
 
 
 ################################################################################
@@ -37,6 +38,12 @@ class Candidate:
             string: the candidate's name
         """
         return self.name
+    
+    def __eq__(self, other):
+        return self.name == other.name
+    
+    def __hash__(self):
+        return hash(self.name)
 
     def initals(self):
         return ''.join([x[0].upper() for x in self.name.split(' ')])
@@ -259,7 +266,7 @@ class RoundResult:
         self.res = tally.to_ordered_list()
         self.first = [x[0] for x in self.res if x[1] == self.res[0][1]]
         self.second = [x[0] for x in self.res[len(self.first):] if x[1] == self.res[len(self.first)][1]]
-        self.percentages = [x[1]/self.votes for x in self.res]
+        self.percentages = [zero_div(x[1], self.votes) for x in self.res]
 
     def single_winner(self):
         """Function to check if a round has had a single winner
@@ -286,7 +293,8 @@ class RoundResult:
         Returns:
             bool: True if the top n candidates have over half the votes, False otherwise
         """
-        return sum(self.percentages[0:n]) > 0.5
+        # The second part helps to check wether the sum is 0.5, due to floating point errors
+        return sum(self.percentages[0:n]) > 0.5 and not math.isclose(sum(self.percentages[0:n]), 0.5)
 
     def sum_percentages(self, n):
         """Function to sum the percentages of the top n candidates
@@ -314,7 +322,7 @@ class RoundResult:
                          RoundResult.dash,
                          #         Nome       Votos           Percentagem
                          '\n'.join(
-                             [f'{str(x[0]):<30}{str(x[1]):^10}{(x[1]/self.votes*100):^12.1f}' for x in self.res]),
+                             [f'{str(x[0]):<30}{str(x[1]):^10}{(zero_div(x[1], self.votes)*100):^12.1f}' for x in self.res]),
                          ' '
                          ])
         )
@@ -334,9 +342,9 @@ def parse_csv(path):
         tuple(election_type (int), candidates (list(Candidate)), ballots (list(Ballot))): election type, list of candidates and list of ballots
     """
     data = import_csv(path)
-    candidates = [Candidate(name) for name in data['candidates']]
+    candidates = [Candidate(name) for name in sorted(data['candidates'])]
     if data['type'] == TYPE_CS:
-        ballots = [SuperiorCouncilBallot(id, votes) for id, votes in data['ballots']]
+        ballots = [SuperiorCouncilBallot(id, [Candidate(name) for name in votes]) for id, votes in sorted(data['ballots'], key=lambda x: x[0])]
     elif data['type'] == TYPE_NC:
-        ballots = [ChamberBallot(id, votes) for id, votes in data['ballots']]    
+        ballots = [ChamberBallot(id, [Candidate(name) for name in votes]) for id, votes in sorted(data['ballots'], key=lambda x: x[0])]    
     return data['type'], candidates, ballots

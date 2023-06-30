@@ -1,0 +1,14 @@
+﻿CS,1,2,3,4,5,6,7,8
+Candidate A,1,1,1,1,1,1,1,1
+Candidate B,2,2,3,3,4,4,5,5
+Candidate C,3,3,4,4,2,2,6,7
+Candidate D,4,4,2,2,3,3,7,6
+Candidate E,5,5,5,6,6,6,2,3
+Candidate F,6,6,6,5,5,5,3,2
+Candidate G,7,8,8,8,8,8,4,4
+Candidate H,,7,7,,,,,
+Candidate I,,,,7,7,,,
+Candidate J,,,,,,7,8,
+Candidate K,8,,,,,,,8
+Candidate L,,,,,,,,
+Candidate M,,,,,,,,
