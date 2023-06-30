@@ -26,7 +26,7 @@ class IOInterface():
     def get_ballots(self, election_type):
         pass
     
-    def get_presidential_choice(self, candidates):
+    def get_presidential_choices(self, candidates, max_winners):
         pass
     
     def output_results(self, seats, elected):

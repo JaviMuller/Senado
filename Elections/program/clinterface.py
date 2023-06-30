@@ -107,6 +107,7 @@ class CLInterface(IOInterface):
                 if name == '':
                     break
                 candidates.append(Candidate(name))
+                candidates.sort(key=lambda candidate: candidate.get_name())
             print('Os candidatos são:')
             for i in range(len(candidates)):
                 print(indent(f'{i+1}. {candidates[i]}', 1))
@@ -171,11 +172,25 @@ class CLInterface(IOInterface):
                 return ballots
     
     def get_presidential_choice(self, candidates):
-        print('Voto presidencial:')
+        print('Candidatos:')
         for i in range(len(candidates)):
             print(indent(f'{i+1}. {candidates[i]}', 1))
-        choice = self.get_choice(len(candidates))
-        return candidates[choice-1]
+        return self.get_choice(len(candidates))
+    
+    def get_presidential_choices(self, candidates, max_winners):
+        if max_winners == 1:
+            return [candidates[self.get_presidential_choice(candidates)-1]]
+        print('Candidatos:')
+        for i in range(len(candidates)):
+            print(indent(f'{i+1}. {candidates[i]}', 1))
+        print(f'Introduza o numero de candidatos que quer escolher (max: {max_winners})')
+        max_winners = self.get_choice(max_winners)
+        choice = []
+        for i in range(max_winners):
+            print (f'Escolha o {i+1}º candidato:')
+            remaining_candidates = [candidate for candidate in candidates if candidate not in choice]
+            choice.append(remaining_candidates[self.get_presidential_choice(remaining_candidates)-1])
+        return choice
     
     def output_results(self, seats, elected):
         pass # Already done in logging

@@ -1,6 +1,23 @@
 from constants import *
 
 ################################################################################
+############################ Mathematical functions ############################
+################################################################################
+
+def zero_div(num, denom):
+    """Function to divide two numbers, returning 0 if the denominator is 0
+
+    Arguments:
+        num (int): numerator
+        denom (int): denominator
+
+    Returns:
+        int: result of the division
+    """
+    return 0 if denom == 0 else num / denom
+
+
+################################################################################
 ############################## String manipulation #############################
 ################################################################################
 
@@ -107,7 +124,7 @@ def get_ballots(df, candidates):
         for i in range(len(row.array)):
             if not pd.isna(row[i]):
                 votes[row.array[i] - 1] = candidates[i]
-        list(filter(None, votes))
+        votes = list(filter(None, votes))
         ballots.append((int(id), votes))
     return ballots
 

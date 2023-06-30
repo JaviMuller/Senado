@@ -1,7 +1,7 @@
 __author__ = "Javier de Muller"
 __copyright__ = "Copyright (C) 2023 Javier de Muller"
 __license__ = "MIT License"
-__version__ = "1.1"
+__version__ = "1.0"
 
 from utils import *
 from base import *
@@ -207,6 +207,7 @@ class RankedRound(Round):
 
     Attributes:
         ballots (list<Ballot>): ballots to be tallied
+        included (optional(list<Candidate>)): candidates to be included in the tally. Defaults to None  
 
     Methods:
         __init__
@@ -221,6 +222,7 @@ class RankedRound(Round):
             ballots (list<Ballot>): list of ballots to be tallied
         """
         super().__init__(ballots)
+        self.included = None
 
     def ballot_tally(self, ballot):
         """Tally for an individual ballot
@@ -239,7 +241,10 @@ class RankedRound(Round):
         Returns:
             RoundResult: The result of a ranked round
         """
-        tally = Tally()
+        if self.included is None:
+            tally = Tally()
+        else:
+            tally = Tally({candidate: 0 for candidate in self.included})
         votes = 0
         for ballot in self.ballots:
             ballot_tally = self.ballot_tally(ballot)
@@ -318,7 +323,8 @@ class BordaRankedRound(RankedRound):
         """
         dict = {}
         for i in range(len(ballot.votes)):
-            dict[ballot.votes[i]] = 8 - i
+            if ballot.votes[i] in self.included:
+                dict[ballot.votes[i]] = 8 - i
         return Tally(dict)
 
 
@@ -360,22 +366,24 @@ class PresidentialRound(Round):
     Attributes:
         ballots (list<Ballot>): ballots to be tallied
         included (list<Candidate>): candidates to be included in the tally
+        max_w (int): maximum number of winning candidates (1 by default)
     
     Methods:
         __init__
         result
     """
 
-    def __init__(self, ballots, included):
+    def __init__(self, ballots, included, max_w = 1):
         """Initialize a presidential round
 
         Arguments:
             ballots (list<Ballot>): ballots to be tallied
             included (list<Candidate>): candidates to be included in the tally
-            round (optional(int)): which round is being done. Defaults to 1.
+            max_winners (optional(int)): maximum number of winning candidates.
         """
         super().__init__(ballots)
         self.included = included
+        self.max_w = max_w
 
     def result(self, interface):
         """Compute the result of the round
@@ -386,9 +394,11 @@ class PresidentialRound(Round):
         Returns:
             RoundResult: result of the round
         """
-        tally = Tally()
-        votes = 1
-        tally.add_vote_to_candidate(interface.get_presidential_choice(self.included))
+        choice = interface.get_presidential_choices(self.included, self.max_w)
+        tally = Tally({candidate: 0 for candidate in self.included})
+        votes = len(choice)
+        for candidate in choice:
+            tally.add_vote_to_candidate(candidate)
 
         return RoundResult(votes, tally)
 
@@ -452,19 +462,19 @@ class Election:
             i += 1
             ## Persistent tie
             if candidates == round.first:
-                round = Election.persistent_tie_rounds(self, candidates, lvl, 2)
+                round = Election.persistent_tie_rounds(self, candidates, lvl, max_winners)
                 break
             ## Progression (number of winners decreases)
             else:
-                round = PreferentialInclusiveRound(self.ballots, candidates).result()
                 candidates = round.first
+                round = PreferentialInclusiveRound(self.ballots, candidates).result()
                 log.info('')
                 log.info(indent(f'Resultados da {i}ª volta de desempate:', lvl))
                 log.info(indent(round, lvl+1))
 
         return round
 
-    def persistent_tie_rounds(self, candidates, lvl, presidential_round = True, max_winners = 1):
+    def persistent_tie_rounds(self, candidates, lvl, max_winners = 1, presidential_round = True):
         """Run persistent tie rounds
 
         Arguments:
@@ -488,13 +498,14 @@ class Election:
         log.info('')
         log.info(indent('Pontuação com sistema de Borda (5.2):', lvl))
         round = BordaRankedRound(self.ballots, candidates).result()
-        if round.first < max_winners:
+        log.info(indent(round, lvl+1))
+        if len(round.first) <= max_winners:
             return round
         
         ## Successive FPTP rounds @5.3 & @5.4
         for i in (1, 2):
             log.info('')
-            log.info(indent('Vence quem surja mais vezes em {i}ª preferência (5.3 & 5.4):', lvl))
+            log.info(indent(f'Vence quem surja mais vezes em {i}ª preferência (5.{2+i}):', lvl))
             round = FirstPastThePostRound(self.ballots, round.first, i).result()
             log.info(indent(round, lvl+1))
             if len(round.first) <= max_winners:
@@ -504,7 +515,7 @@ class Election:
         if presidential_round:
             log.info('')
             log.info(indent('Empate absoluto, a decisão pertence ao Presidente (5.5)', lvl))
-            round = PresidentialRound(self.ballots, round.first).result(self.interface)
+            round = PresidentialRound(self.ballots, round.first, max_winners).result(self.interface)
             log.info(indent(round, lvl+1))
         
         return round
@@ -513,10 +524,17 @@ class Election:
         """Run an election (## for flow control, # for normal comments, @ for references to statutes)"""
         # Log candidates and ballots
         lvl = 0
-          
-
         elected = []
+        log.info(subtitle_str('Dados iniciais'))
+        log.info('Candidatos:')
+        for i in range(len(self.candidates)):
+            log.info(indent(f'{i+1}. {self.candidates[i]}', lvl+1))
+        log.info('')
+        log.info('Boletins:')
+        for ballot in self.ballots:
+            log.info(indent(ballot, lvl+1))       
         
+        # Run election for each seat
         for seat in self.seats:
             log.info('')
             log.info(subtitle_str(f'Eleição {seat}'))
@@ -528,10 +546,19 @@ class Election:
             log.info(indent('1ª volta:', lvl))
             log.info(indent(round, lvl+1))
             
+            # No more ballots left to count, the substitute is elected by the president
+            if len(winners) == 0:
+                log.info('Não há mais boletins para contar, o candidato é eleito pelo Presidente (5.5).')
+                round = PresidentialRound(self.ballots, list(set(self.candidates) - set(elected))).result(self.interface)
+                log.info(indent(round, lvl+1))
+                elected += round.first
+                log.info(indent(f'O cargo de {seat} foi atribuído a: {str(round.first[0])}.', lvl))
+                continue
+    
             ## Winner in 1st round with absolute majority @3
             if round.over_half(1):
                 elected += winners
-                log.info(indent(f'{str(winners[0])}vencedor por maioria na 1ª volta (3).', lvl))
+                log.info(indent(f'{str(winners[0])} vencedor por maioria na 1ª volta (3).', lvl))
                 log.info(indent(f'O cargo de {seat} foi atribuído a: {str(winners[0])}.', lvl))
                 continue
             
@@ -557,6 +584,7 @@ class Election:
                     if len(round.second) > 1:
                         log.info(indent('Existe empate para segundo lugar (4.2.a.i).', lvl))
                         round = self.tiebreaker(round.second, lvl)
+                        finalists += round.first
                     ## No tie for second place @4.2.a).ii)
                     else:
                         log.info(indent('Não existe empate para segundo lugar (4.2.a.ii). ', lvl))
@@ -597,7 +625,7 @@ class Election:
                         if len(round.first) > 1:
                             log.info(indent('Existe empate na 1ª volta intermédia.', lvl))
                             round = self.tiebreaker(round.first, lvl)
-                        finalists = winners
+                        finalists = round.first
                         # Second intermediate round without the first candidate
                         round = PreferentialExclusiveRound(self.ballots, elected + finalists).result()
                         log.info('')
@@ -631,7 +659,7 @@ class Election:
                             continue
                         # Tie
                         log.info(indent('Existe empate na 2ª volta especial.', lvl))
-                        round = self.persistent_tie_rounds(round.first, lvl, False)
+                        round = self.persistent_tie_rounds(round.first, lvl, 1, False)
                         # Successful tie breaker
                         if len(round.first) == 1:
                             elected += round.first
@@ -779,6 +807,7 @@ class App():
 if __name__ == '__main__':
     import argparse
     from datetime import datetime
+    import sys
     import os
 
     LOG_DIR = os.path.join(os.path.normpath(__file__ + 2*(os.sep + os.pardir)), 'logs')
@@ -815,17 +844,18 @@ if __name__ == '__main__':
         interface = CLInterface() # Default
     
     ## Add log handlers
-    console_handler = logging.StreamHandler()
+    console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(FORMATTER)
     log.addHandler(console_handler)
     if (args.log):
+        root_log = logging.getLogger()
         if not os.path.exists(LOG_DIR):
             os.makedirs(LOG_DIR)
         file_handler = logging.FileHandler(LOG_FILENAME, mode='w', encoding='utf-8')
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(FORMATTER)
-        log.addHandler(file_handler)
+        root_log.addHandler(file_handler)
     
     
     ## Import election_type, candidates and ballots from CSV

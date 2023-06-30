@@ -1,10 +1,9 @@
 Add optional in documentation for arguments with default values
-Add parameter checks
-Add unit tests
-Define CLI/UI interface
 Implement integration tests
 Investigate Github actions for branch checking
 Investigate whether it makes sense to use any other github features (wiki, projects, etc)
 
-Check ballots with number of votes less than expected
-Add file import to cli
+Missing multiple presidential choice (first round, absolute tie between 3 people)
+
+Synthetic tests:
+   - Need to check all paths in the elections diagram
