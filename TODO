@@ -2,8 +2,3 @@ Add optional in documentation for arguments with default values
 Implement integration tests
 Investigate Github actions for branch checking
 Investigate whether it makes sense to use any other github features (wiki, projects, etc)
-
-Missing multiple presidential choice (first round, absolute tie between 3 people)
-
-Synthetic tests:
-   - Need to check all paths in the elections diagram
