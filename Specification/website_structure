@@ -1,0 +1,49 @@
+.
+├── Home
+├── About
+└── Login (user app)
+
+/user
+├── Profile
+├── Newsletter
+├── Annual Reading Plan
+├── Elections/Referendums/Polls
+├── (Admin) Strategic Bi-annual Plans
+├── (Admin) Reports
+│   ├── Strategic Bi-annual Plan
+│   ├── Dinners
+│   │   ├── Monthly Dinners
+│   │   └── Moral Dinners
+│   ├── Precedence
+│   │   ├── Precedence of Setup
+│   │   └── Precedence of Invitation
+│   ├── Chamber Compositions
+│   │   ├── Current situation
+│   │   └── Evolution
+│   ├── Interviews, Expulsions and Debuts
+│   │   ├── Current situation
+│   │   └── Evolution
+│   ├── Politization
+│   ├── Communication
+│   │   ├── Internal Communication
+│   │   └── External Communication
+│   ├── Finances
+│   │   ├── General Finances
+│   │   └── Chamber Finances
+│   └── Administrators
+├── (DN) Chamber Management
+├── (DG) General Direction Administration
+├── (CS) Superior Council Administration
+└── Resources
+    ├── Statutes
+    ├── Presidential Documents
+    │   ├── Messages
+    │   ├── Missives
+    │   └── Solemn Discourses
+    ├── Recommendations
+    │   ├── Books
+    │   ├── Movies
+    │   ├── Documentaries
+    │   ├── Podcasts
+    │   └── Articles
+    └── Others (Formations, foundational documents, etc.)
