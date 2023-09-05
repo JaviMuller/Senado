@@ -26,6 +26,9 @@ class IOInterface():
     def get_ballots(self, election_type):
         pass
     
+    def get_chamber_name(self):
+        pass
+    
     def get_presidential_choices(self, candidates, max_winners):
         pass
     

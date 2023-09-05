@@ -792,6 +792,7 @@ class App():
             election = SuperiorCouncilElection(self.candidates, self.ballots, self.interface)
         elif self.election_type == TYPE_NC:
             election = ChamberElection(self.candidates, self.ballots, self.interface)
+            election.set_chamber(self.interface.get_chamber_name())
         else:
             raise ValueError('App.run: Invalid Election Type.')
         election.run()

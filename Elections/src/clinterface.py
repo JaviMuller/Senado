@@ -171,6 +171,10 @@ class CLInterface(IOInterface):
             if self.get_confirmation('Confirmar?'):
                 return ballots
     
+    def get_chamber_name(self):
+        print('Introduza o nome da câmara (e.g. "I"): ', end='')
+        return input()
+    
     def get_presidential_choice(self, candidates):
         print('Candidatos:')
         for i in range(len(candidates)):
