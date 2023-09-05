@@ -142,7 +142,7 @@ class CLInterface(IOInterface):
                 choice = self.get_choice(len(remaining_candidates), empty=True)
                 if choice == None:
                     break
-                ballot.add_vote(candidates[choice-1])
+                ballot.add_vote(remaining_candidates[choice-1])
                 print('Votos inseridos:')
                 votes = ballot.get_votes()
                 for i in range(len(votes)):
