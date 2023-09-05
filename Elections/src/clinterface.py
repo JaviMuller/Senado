@@ -71,6 +71,7 @@ class CLInterface(IOInterface):
                 path = filedialog.asksaveasfilename(defaultextension='.csv', filetypes=[('CSV files', '*.csv'), ('All files', '*.*')])
                 if path != '':
                     export_csv(path, election_type, candidates, ballots)
+                    return ''
             else:
                 return ''
     
