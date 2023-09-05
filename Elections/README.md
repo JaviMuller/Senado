@@ -11,6 +11,10 @@ O programa pode ser corrido desde a linha de comandos das seguintes formas:
 
 O ficheiro de importação do csv e os logs também podem ser dados de forma interativa na interface de linha de comandos.
 
+O ficheiro foi bundled com pyinstaller com o comando:
+
+    pyinstaller elections.py --onefile --name "Eleições Senado" --icon <path_to_icon>
+
 ## Dependências:
 
     argparse

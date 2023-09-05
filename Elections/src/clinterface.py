@@ -163,7 +163,7 @@ class CLInterface(IOInterface):
                     break
                 ballot = self.get_ballot(election_type, candidates, inserted_ids=[ballot.get_id() for ballot in ballots])
                 if ballot != None:
-                    ballots.append()
+                    ballots.append(ballot)
             ballots.sort(key=lambda x: x.get_id())
             print('Os boletins são:')
             for ballot in ballots:
