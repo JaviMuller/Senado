@@ -26,7 +26,8 @@ class CLInterface(IOInterface):
     
     def get_choice(self, max, empty=False):
         while True:
-            assert max > 0
+            if max <= 0:
+                return None
             print(f'Escolha (1-{max}): ', end='')
             try:
                 opt_choice = input()

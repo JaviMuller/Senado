@@ -161,7 +161,7 @@ def export_csv(path, election_type, candidates, ballots):
         data[ballot.get_id()] = [csv_vote(ballot, candidate) for candidate in candidates]
     
     df = pd.DataFrame(data)
-    df.to_csv(path, encoding='utf-8')
+    df.to_csv(path, encoding='utf-8', index=False)
     
 def import_csv(path):
     """Imports a csv file from a given path

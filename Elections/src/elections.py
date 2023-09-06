@@ -768,7 +768,7 @@ class App():
     def is_set(self):
         return self.election_type != -1 and len(self.candidates) > 0 and len(self.ballots) > 0
     
-    def run(self, export = ''):
+    def run(self, export_path = ''):
         self.interface.welcome()
         if (len(log.handlers) == 1): # Only console handler
             path = self.interface.ask_log_export()
@@ -786,8 +786,8 @@ class App():
                 self.candidates = self.interface.get_candidates(self.candidates)
                 self.ballots = self.interface.get_ballots(self.election_type, self.candidates, self.ballots)
                 self.interface.ask_csv_export(self.election_type, self.candidates,self.ballots)
-        if export != '':
-            export_csv(self.election_type, self.candidates, self.ballots, export)
+        if export_path != '':
+            export_csv(export_path, self.election_type, self.candidates, self.ballots)
         if self.election_type == TYPE_CS:
             election = SuperiorCouncilElection(self.candidates, self.ballots, self.interface)
         elif self.election_type == TYPE_NC:
