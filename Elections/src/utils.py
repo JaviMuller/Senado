@@ -80,7 +80,7 @@ def csv_to_df(path):
     Returns:
         pandas.DataFrame: dataframe with the csv file data
     """
-    df = pd.read_csv(path, index_col=0, encoding='utf-8')
+    df = pd.read_csv(path, index_col=0, encoding='utf-8-sig', sep=None, engine='python')
     return df.astype('Int64')
 
 def get_election_type(df):
