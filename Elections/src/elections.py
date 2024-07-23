@@ -1,7 +1,7 @@
 __author__ = "Javier de Muller"
 __copyright__ = "Copyright (C) 2023 Javier de Muller"
 __license__ = "MIT License"
-__version__ = "1.0"
+__version__ = "2.0"
 
 from utils import *
 from base import *
@@ -502,19 +502,10 @@ class Election:
         if len(round.first) <= max_winners:
             return round
         
-        ## Successive FPTP rounds @5.3 & @5.4
-        for i in (1, 2):
-            log.info('')
-            log.info(indent(f'Vence quem surja mais vezes em {i}ª preferência (5.{2+i}):', lvl))
-            round = FirstPastThePostRound(self.ballots, round.first, i).result()
-            log.info(indent(round, lvl+1))
-            if len(round.first) <= max_winners:
-                return round
-        
         ## Presidential round @5.5
         if presidential_round:
             log.info('')
-            log.info(indent('Empate absoluto, a decisão pertence ao Presidente (5.5)', lvl))
+            log.info(indent('Empate absoluto, a decisão pertence ao Presidente (5.3)', lvl))
             round = PresidentialRound(self.ballots, round.first, max_winners).result(self.interface)
             log.info(indent(round, lvl+1))
         
@@ -548,7 +539,7 @@ class Election:
             
             # No more ballots left to count, the substitute is elected by the president
             if len(winners) == 0:
-                log.info('Não há mais boletins para contar, o candidato é eleito pelo Presidente (5.5).')
+                log.info('Não há mais boletins para contar, o candidato é eleito pelo Presidente (5.3).')
                 round = PresidentialRound(self.ballots, list(set(self.candidates) - set(elected))).result(self.interface)
                 log.info(indent(round, lvl+1))
                 elected += round.first
@@ -579,21 +570,21 @@ class Election:
                     
                 ## Sum of two most voted is over half @4.2.a)
                 if first_round.over_half(2):
-                    log.info(indent(f'Soma dos dois primeiros superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.2.a).', lvl))
+                    log.info(indent(f'Soma dos dois primeiros superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.2.1).', lvl))
                     ## Tie for second place @4.2.a).i)
                     if len(round.second) > 1:
-                        log.info(indent('Existe empate para segundo lugar (4.2.a.i).', lvl))
+                        log.info(indent('Existe empate para segundo lugar (4.2.1.1).', lvl))
                         round = self.tiebreaker(round.second, lvl)
                         finalists += round.first
                     ## No tie for second place @4.2.a).ii)
                     else:
-                        log.info(indent('Não existe empate para segundo lugar (4.2.a.ii). ', lvl))
+                        log.info(indent('Não existe empate para segundo lugar (4.2.1.2). ', lvl))
                         log.info(indent(f'2ª volta com os dois primeiros ({str(winners[0])} e {str(round.second[0])}).', lvl))
                         finalists += round.second
                         
                 ## Sum of two most voted is less than half @4.2.b)
                 else:
-                    log.info(indent(f'Soma dos dois primeiros igual ou inferior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.2.b).', lvl)) 
+                    log.info(indent(f'Soma dos dois primeiros igual ou inferior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.2.2).', lvl)) 
                     log.info(indent(f'Passa a ser determinado o oponente do vencedor ({str(winners[0])}) para a 2ª volta.', lvl))
                     round = PreferentialExclusiveRound(self.ballots, elected + winners).result()
                     log.info('')
@@ -609,13 +600,13 @@ class Election:
                 log.info(indent(f'Empate na 1ª volta ({str(winners[0])} e {str(winners[1])}) (4.3).', lvl))
                 ## Sum of two most voted is over half @4.3.c)
                 if first_round.over_half(2):
-                    log.info(indent(f'Soma dos dois primeiros ({str(winners[0])} e {str(winners[1])}) superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.c).', lvl))
+                    log.info(indent(f'Soma dos dois primeiros ({str(winners[0])} e {str(winners[1])}) superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.1).', lvl))
                     finalists = winners
                 ## Sum of two most voted is less than half
                 else:
                     ## Sum of three most voted is less than half @4.3.d)
                     if not first_round.over_half(3):
-                        log.info(indent(f'Soma dos três primeiros igual ou inferior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.d).', lvl))
+                        log.info(indent(f'Soma dos três primeiros igual ou inferior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.2).', lvl))
                         log.info(indent('Passa a ser determinado o primeiro candidato de entre os dois vencedores da 1ª volta.', lvl))
                         # Intermediate round to determine first candidate
                         round = PreferentialInclusiveRound(self.ballots, winners).result()
@@ -637,7 +628,7 @@ class Election:
                         finalists += round.first
                     ## Sum of three most voted is over half @4.3.e)
                     else:
-                        log.info(indent(f'Soma dos três primeiros superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.e).', lvl))
+                        log.info(indent(f'Soma dos três primeiros superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.3).', lvl))
                         log.info(indent('Passa a ser determinado o terceiro candidato sem os dois vencedores da 1ª volta.', lvl))
                         round = PreferentialExclusiveRound(self.ballots, elected + winners).result()
                         log.info('')
