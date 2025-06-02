@@ -606,7 +606,7 @@ class Election:
                 else:
                     ## Sum of three most voted is less than half @4.3.d)
                     if not first_round.over_half(3):
-                        log.info(indent(f'Soma dos três primeiros igual ou inferior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.2).', lvl))
+                        log.info(indent(f'Soma dos três primeiros igual ou inferior a 50% ({first_round.sum_percentages(3)*100:.1f}%) na 1ª volta (4.3.2).', lvl))
                         log.info(indent('Passa a ser determinado o primeiro candidato de entre os dois vencedores da 1ª volta.', lvl))
                         # Intermediate round to determine first candidate
                         round = PreferentialInclusiveRound(self.ballots, winners).result()
@@ -628,7 +628,7 @@ class Election:
                         finalists += round.first
                     ## Sum of three most voted is over half @4.3.e)
                     else:
-                        log.info(indent(f'Soma dos três primeiros superior a 50% ({first_round.sum_percentages(2)*100:.1f}%) na 1ª volta (4.3.3).', lvl))
+                        log.info(indent(f'Soma dos três primeiros superior a 50% ({first_round.sum_percentages(3)*100:.1f}%) na 1ª volta (4.3.3).', lvl))
                         log.info(indent('Passa a ser determinado o terceiro candidato sem os dois vencedores da 1ª volta.', lvl))
                         round = PreferentialExclusiveRound(self.ballots, elected + winners).result()
                         log.info('')
